@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeetCode Top 50 Companies — 6-Month Frequency Explorer</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Mobile sidebar backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop hidden" aria-hidden="true"></div>
+
+    <!-- Left Side Panel: Company Toggles -->
+    <aside id="sidebar" class="sidebar" aria-label="Company filters">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <div>
+            <h1>Company Explorer</h1>
+            <p class="brand-sub">Top 50 · Last 6 Months</p>
+          </div>
+        </div>
+        <button id="closeSidebarBtn" class="icon-btn mobile-only" type="button" aria-label="Close sidebar">✕</button>
+      </div>
+
+      <div class="sidebar-controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          <input id="companySearch" type="search" placeholder="Filter companies..." autocomplete="off" />
+        </div>
+
+        <div class="quick-presets">
+          <button id="presetFaang" class="chip-btn" type="button" title="Toggle Meta, Amazon, Apple, Netflix, Google, Microsoft">FAANG+</button>
+          <button id="presetAll" class="chip-btn" type="button">All 50</button>
+          <button id="presetClear" class="chip-btn" type="button">Clear</button>
+        </div>
+
+        <div class="selection-meta">
+          <span id="selectedCountLabel">0 selected</span>
+          <label class="union-toggle" title="Union shows problems in ANY selected company; Intersection shows problems in ALL selected companies">
+            <input id="matchModeToggle" type="checkbox" />
+            <span>Match all selected</span>
+          </label>
+        </div>
+      </div>
+
+      <ul id="companyList" class="company-list" role="listbox" aria-multiselectable="true"></ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="openSidebarBtn" class="icon-btn mobile-only" type="button" aria-label="Open companies panel">
+            ☰ Companies
+          </button>
+          <div class="title-block">
+            <h2 id="activeHeading">Select a company</h2>
+            <p id="activeSubheading" class="muted">Last 6 months · sorted by interview frequency</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div id="statsPills" class="stats-pills" aria-live="polite"></div>
+          <button id="themeToggleBtn" class="icon-btn" type="button" title="Toggle light/dark theme" aria-label="Toggle theme">
+            ☀
+          </button>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="Problem filters">
+        <div class="toolbar-search">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          <input id="problemSearch" type="search" placeholder="Search by #, title, or topic..." autocomplete="off" />
+        </div>
+
+        <div class="difficulty-pills" role="group" aria-label="Difficulty filter">
+          <button class="pill active" data-diff="ALL" type="button">All</button>
+          <button class="pill diff-easy" data-diff="Easy" type="button">Easy</button>
+          <button class="pill diff-medium" data-diff="Medium" type="button">Medium</button>
+          <button class="pill diff-hard" data-diff="Hard" type="button">Hard</button>
+        </div>
+
+        <select id="topicFilter" aria-label="Filter by topic">
+          <option value="">All Topics</option>
+        </select>
+
+        <select id="accessFilter" aria-label="Filter by access">
+          <option value="ALL">Free &amp; Premium</option>
+          <option value="FREE">Free Only</option>
+          <option value="PAID">Premium Only</option>
+        </select>
+
+        <select id="solvedFilter" aria-label="Filter by local solved status">
+          <option value="ALL">All Progress</option>
+          <option value="UNSOLVED">Unsolved</option>
+          <option value="SOLVED">Solved</option>
+        </select>
+
+        <select id="sortSelect" aria-label="Sort problems">
+          <option value="frequency_desc">Sort: Frequency ↓</option>
+          <option value="companies_desc">Sort: Company Count ↓</option>
+          <option value="ac_desc">Sort: Acceptance ↓</option>
+          <option value="difficulty_asc">Sort: Difficulty ↑</option>
+          <option value="id_asc">Sort: Problem # ↑</option>
+        </select>
+      </section>
+
+      <div id="activeCompanyChips" class="active-company-chips"></div>
+
+      <section class="table-container">
+        <table class="problems-table">
+          <thead>
+            <tr>
+              <th class="col-done" title="Tracked locally in your browser">Done</th>
+              <th class="col-id">#</th>
+              <th class="col-title">Problem</th>
+              <th class="col-diff">Difficulty</th>
+              <th class="col-ac">Acceptance</th>
+              <th class="col-freq">Frequency (6m)</th>
+              <th class="col-companies">Companies</th>
+            </tr>
+          </thead>
+          <tbody id="problemsBody"></tbody>
+        </table>
+
+        <div id="emptyState" class="empty-state hidden">
+          <p id="emptyMessage">No problems match your current filters.</p>
+          <button id="resetFiltersBtn" class="chip-btn" type="button">Reset Filters</button>
+        </div>
+      </section>
+
+      <footer class="pagination-bar">
+        <span id="paginationInfo" class="muted"></span>
+        <div class="pagination-actions">
+          <button id="prevPageBtn" class="chip-btn" type="button">← Prev</button>
+          <span id="pageIndicator" class="page-indicator"></span>
+          <button id="nextPageBtn" class="chip-btn" type="button">Next →</button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
