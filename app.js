@@ -13,11 +13,17 @@
   const SOLVED_STORAGE_KEY = "lc_explorer_solved_v1";
   const THEME_STORAGE_KEY = "lc_explorer_theme_v1";
 
+  const TIMELINE_LABELS = {
+    "30d": { short: "30d", title: "Last 30 Days", phrase: "Last 30 days" },
+    "3m": { short: "3m", title: "Last 3 Months", phrase: "Last 3 months" },
+    "6m": { short: "6m", title: "Last 6 Months", phrase: "Last 6 months" },
+  };
+
   const state = {
     dataset: null,
     companyBySlug: new Map(),
-    problemToCompanies: new Map(),
     selectedCompanies: new Set(["facebook"]),
+    timeline: "6m",
     companySearch: "",
     matchAllSelected: false,
     problemSearch: "",
@@ -35,6 +41,7 @@
     sidebarBackdrop: document.getElementById("sidebarBackdrop"),
     openSidebarBtn: document.getElementById("openSidebarBtn"),
     closeSidebarBtn: document.getElementById("closeSidebarBtn"),
+    brandSub: document.getElementById("brandSub"),
     companySearch: document.getElementById("companySearch"),
     presetFaang: document.getElementById("presetFaang"),
     presetAll: document.getElementById("presetAll"),
@@ -47,7 +54,9 @@
     statsPills: document.getElementById("statsPills"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
     problemSearch: document.getElementById("problemSearch"),
+    timelineButtons: Array.from(document.querySelectorAll(".timeline-pills .pill")),
     diffButtons: Array.from(document.querySelectorAll(".difficulty-pills .pill")),
+    freqHeader: document.getElementById("freqHeader"),
     topicFilter: document.getElementById("topicFilter"),
     accessFilter: document.getElementById("accessFilter"),
     solvedFilter: document.getElementById("solvedFilter"),
@@ -112,20 +121,25 @@
       .replace(/"/g, "&quot;");
   }
 
+  function getCompanyProblems(company) {
+    if (!company) return [];
+    if (company.timelines && Array.isArray(company.timelines[state.timeline])) {
+      return company.timelines[state.timeline];
+    }
+    return company.problems || [];
+  }
+
+  function getCompanyCount(company) {
+    if (company.counts && typeof company.counts[state.timeline] === "number") {
+      return company.counts[state.timeline];
+    }
+    return getCompanyProblems(company).length;
+  }
+
   function buildIndexes(data) {
     const topics = new Set();
     for (const company of data.companies) {
       state.companyBySlug.set(company.slug, company);
-      for (const entry of company.problems) {
-        if (!state.problemToCompanies.has(entry.slug)) {
-          state.problemToCompanies.set(entry.slug, []);
-        }
-        state.problemToCompanies.get(entry.slug).push({
-          slug: company.slug,
-          name: company.name,
-          frequency: entry.frequency,
-        });
-      }
     }
 
     for (const problem of Object.values(data.problems)) {
@@ -149,6 +163,9 @@
   }
 
   function renderSidebar() {
+    const tl = TIMELINE_LABELS[state.timeline] || TIMELINE_LABELS["6m"];
+    els.brandSub.textContent = `Top 50 · ${tl.title}`;
+
     const q = state.companySearch.trim().toLowerCase();
     const companies = state.dataset.companies.filter((c) =>
       !q || c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q)
@@ -159,6 +176,7 @@
     const frag = document.createDocumentFragment();
     for (const company of companies) {
       const isSelected = state.selectedCompanies.has(company.slug);
+      const count = getCompanyCount(company);
       const li = document.createElement("li");
       li.className = `company-item${isSelected ? " selected" : ""}`;
       li.setAttribute("role", "option");
@@ -170,7 +188,7 @@
           <input class="company-checkbox" type="checkbox" ${isSelected ? "checked" : ""} tabindex="-1" aria-hidden="true" />
           <span class="company-name">${escapeHtml(company.name)}</span>
         </span>
-        <span class="company-count">${company.count}</span>
+        <span class="company-count">${count}</span>
       `;
       frag.appendChild(li);
     }
@@ -210,7 +228,7 @@
     for (const cSlug of selected) {
       const company = state.companyBySlug.get(cSlug);
       if (!company) continue;
-      for (const entry of company.problems) {
+      for (const entry of getCompanyProblems(company)) {
         if (!matchedCompaniesByProblem.has(entry.slug)) {
           matchedCompaniesByProblem.set(entry.slug, []);
           freqByProblem.set(entry.slug, entry.frequency);
@@ -255,7 +273,6 @@
         problem: p,
         frequency: freqByProblem.get(pSlug) || 0,
         matchedCompanies,
-        allCompanies: state.problemToCompanies.get(pSlug) || matchedCompanies,
         isSolved,
       });
     }
@@ -290,6 +307,9 @@
   }
 
   function renderMain() {
+    const tl = TIMELINE_LABELS[state.timeline] || TIMELINE_LABELS["6m"];
+    els.freqHeader.textContent = `Frequency (${tl.short})`;
+
     const selected = [...state.selectedCompanies];
     if (selected.length === 0) {
       els.activeHeading.textContent = "No companies selected";
@@ -297,17 +317,17 @@
     } else if (selected.length === 1) {
       const c = state.companyBySlug.get(selected[0]);
       els.activeHeading.textContent = c ? c.name : selected[0];
-      els.activeSubheading.textContent = "Last 6 months · sorted by interview frequency";
+      els.activeSubheading.textContent = `${tl.phrase} · sorted by interview frequency`;
     } else if (selected.length === state.dataset.companies.length) {
       els.activeHeading.textContent = `All ${selected.length} Companies`;
       els.activeSubheading.textContent = state.matchAllSelected
-        ? "Problems appearing in all selected companies (last 6 months)"
-        : "Combined problems across all 50 companies (last 6 months)";
+        ? `Problems appearing in all selected companies (${tl.phrase.toLowerCase()})`
+        : `Combined problems across all ${selected.length} companies (${tl.phrase.toLowerCase()})`;
     } else {
       els.activeHeading.textContent = `${selected.length} Companies Selected`;
       els.activeSubheading.textContent = state.matchAllSelected
-        ? "Intersection: problems appearing in every selected company"
-        : "Union: problems appearing in any selected company";
+        ? `Intersection (${tl.phrase.toLowerCase()}): problems in every selected company`
+        : `Union (${tl.phrase.toLowerCase()}): problems in any selected company`;
     }
 
     renderActiveChips();
@@ -339,7 +359,7 @@
       els.emptyState.classList.remove("hidden");
       els.emptyMessage.textContent =
         selected.length === 0
-          ? "Select at least one company on the left to view its 6-month problems."
+          ? `Select at least one company on the left to view its ${tl.phrase.toLowerCase()} problems.`
           : "No problems match your current filters.";
     } else {
       els.emptyState.classList.add("hidden");
@@ -484,6 +504,17 @@
       state.page = 1;
       renderMain();
     });
+
+    for (const btn of els.timelineButtons) {
+      btn.addEventListener("click", () => {
+        for (const b of els.timelineButtons) b.classList.remove("active");
+        btn.classList.add("active");
+        state.timeline = btn.dataset.timeline;
+        state.page = 1;
+        renderSidebar();
+        renderMain();
+      });
+    }
 
     for (const btn of els.diffButtons) {
       btn.addEventListener("click", () => {

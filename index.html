@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LeetCode Top 50 Companies — 6-Month Frequency Explorer</title>
+  <title>LeetCode Top 50 Companies — Frequency Explorer</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -18,7 +18,7 @@
           <span class="brand-dot" aria-hidden="true"></span>
           <div>
             <h1>Company Explorer</h1>
-            <p class="brand-sub">Top 50 · Last 6 Months</p>
+            <p id="brandSub" class="brand-sub">Top 50 · Last 6 Months</p>
           </div>
         </div>
         <button id="closeSidebarBtn" class="icon-btn mobile-only" type="button" aria-label="Close sidebar">✕</button>
@@ -79,6 +79,12 @@
           <input id="problemSearch" type="search" placeholder="Search by #, title, or topic..." autocomplete="off" />
         </div>
 
+        <div class="timeline-pills" role="group" aria-label="Timeline filter">
+          <button class="pill" data-timeline="30d" type="button">30 Days</button>
+          <button class="pill" data-timeline="3m" type="button">3 Months</button>
+          <button class="pill active" data-timeline="6m" type="button">6 Months</button>
+        </div>
+
         <div class="difficulty-pills" role="group" aria-label="Difficulty filter">
           <button class="pill active" data-diff="ALL" type="button">All</button>
           <button class="pill diff-easy" data-diff="Easy" type="button">Easy</button>
@@ -122,7 +128,7 @@
               <th class="col-title">Problem</th>
               <th class="col-diff">Difficulty</th>
               <th class="col-ac">Acceptance</th>
-              <th class="col-freq">Frequency (6m)</th>
+              <th id="freqHeader" class="col-freq">Frequency (6m)</th>
               <th class="col-companies">Companies</th>
             </tr>
           </thead>

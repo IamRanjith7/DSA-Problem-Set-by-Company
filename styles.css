@@ -381,13 +381,19 @@ select:focus {
   min-width: 135px;
 }
 
-.difficulty-pills {
+.difficulty-pills,
+.timeline-pills {
   display: inline-flex;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 2px;
   gap: 2px;
+}
+
+.timeline-pills .pill.active {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .pill {
