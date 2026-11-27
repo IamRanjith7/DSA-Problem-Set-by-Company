@@ -18,9 +18,11 @@
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   --radius: 10px;
   --sidebar-width: 290px;
+  color-scheme: dark;
 }
 
 html[data-theme="light"] {
+  color-scheme: light;
   --bg: #f6f8fa;
   --bg-elevated: #ffffff;
   --bg-hover: #f0f3f6;

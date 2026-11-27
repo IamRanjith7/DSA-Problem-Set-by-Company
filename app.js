@@ -75,8 +75,13 @@
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme === "light" || savedTheme === "dark") {
         applyTheme(savedTheme);
+      } else {
+        const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+        applyTheme(prefersLight ? "light" : "dark");
       }
-    } catch (_) {}
+    } catch (_) {
+      applyTheme("dark");
+    }
   }
 
   function saveSolved() {
@@ -87,7 +92,8 @@
 
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
-    els.themeToggleBtn.textContent = theme === "dark" ? "☀" : "☾";
+    els.themeToggleBtn.textContent = theme === "dark" ? "☀ Light Mode" : "☾ Dark Mode";
+    els.themeToggleBtn.setAttribute("aria-pressed", String(theme === "light"));
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch (_) {}
